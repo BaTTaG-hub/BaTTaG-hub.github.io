@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Katerina — Visual Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📷</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:  #0d0b0e;
+      --white:  #f5f0eb;
+      --gray:   #8a8090;
+      --red:    #7a1530;
+      --blue:   #89b4d4;
+      --pink:   #e8b4bc;
+      --yellow: #f2d94e;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Caveat', cursive; font-weight: 400;
+      overflow-x: hidden; cursor: none;
+      background-color: var(--black);
+      background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='30' font-size='10' fill='white' opacity='0.05'%3E%E2%9C%A6%3C/text%3E%3Ctext x='60' y='75' font-size='8' fill='%2389b4d4' opacity='0.06'%3E%E2%98%85%3C/text%3E%3Ccircle cx='80' cy='20' r='1.5' fill='%23f2d94e' opacity='0.07'/%3E%3C/svg%3E");
+      background-size:100px 100px;
+      color: var(--white);
+    }
+
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+      opacity:.04; mix-blend-mode:overlay;
+    }
+
+    #loader {
+      position: fixed; inset: 0; z-index: 10000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity .8s ease, visibility .8s ease;
+      background-color: var(--black);
+      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='4' fill='%2389b4d4' opacity='0.06'/%3E%3C/svg%3E");
+      background-size: 40px 40px;
+    }
+    #loader.hide { opacity: 0; visibility: hidden; }
+    .loader-name {
+      font-family: 'Caveat', cursive; font-weight: 700;
+      font-size: clamp(48px, 10vw, 120px);
+      letter-spacing: .12em; color: var(--white); overflow: hidden;
+    }
+    .loader-name span {
+      display: inline-block; transform: translateY(100%);
+      animation: slideUp .8s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .loader-name span:nth-child(1){animation-delay:.0s}
+    .loader-name span:nth-child(2){animation-delay:.1s}
+    .loader-name span:nth-child(3){animation-delay:.2s}
+    .loader-name span:nth-child(4){animation-delay:.3s}
+    .loader-name span:nth-child(5){animation-delay:.4s}
+    .loader-name span:nth-child(6){animation-delay:.5s}
+    .loader-name span:nth-child(7){animation-delay:.6s}
+    .loader-name span:nth-child(8){animation-delay:.7s}
+    .loader-sub {
+      font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+      color:var(--gray); margin-top:16px; animation:fadeIn 1s ease .9s both;
+    }
+    .loader-line {
+      width:0; height:2px; background:var(--blue);
+      margin-top:32px; animation:expandLine 1.2s ease .5s forwards;
+    }
+    @keyframes slideUp    { to{ transform:translateY(0); } }
+    @keyframes fadeIn     { to{ opacity:1; } }
+    @keyframes expandLine { to{ width:200px; } }
+
+    #cursor {
+      position:fixed; z-index:9998; pointer-events:none;
+      width:40px; height:40px;
+      border:1px solid rgba(137,180,212,.6); border-radius:50%;
+      transform:translate(-50%,-50%);
+      transition:width .3s,height .3s,background .3s,border-color .3s;
+      mix-blend-mode:difference;
+    }
+    #cursor.hover {
+      width:60px; height:60px;
+      background:rgba(137,180,212,.15); border-color:var(--blue);
+    }
+    #cursor-dot {
+      position:fixed; z-index:9998; pointer-events:none;
+      width:4px; height:4px; border-radius:50%;
+      background:var(--white); transform:translate(-50%,-50%);
+    }
+    #cursor-label {
+      position:fixed; z-index:9998; pointer-events:none;
+      font-family:'Caveat',cursive;font-weight:700; font-size:10px; letter-spacing:.15em;
+      color:var(--white); opacity:0; transform:translate(-50%,-50%);
+      transition:opacity .2s; white-space:nowrap;
+    }
+    #cursor-label.show{ opacity:1; }
+
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:200;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:20px 40px; mix-blend-mode:difference;
+    }
+    .nav-logo {
+      font-family:'Caveat',cursive;font-weight:700; font-size:20px;
+      letter-spacing:.12em; color:var(--white); text-decoration:none; cursor:none;
+    }
+    .nav-links{ display:flex; gap:32px; list-style:none; }
+    .nav-links a {
+      color:var(--white); text-decoration:none; cursor:none;
+      font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+      opacity:.6; transition:opacity .2s, color .2s;
+    }
+    .nav-links a:hover{ opacity:1; color:var(--blue); }
+
+    /* ── HERO (BOOK) ── */
+    #hero {
+      min-height:100vh; display:grid; grid-template-columns:1fr 1fr; overflow:hidden;
+    }
+    .hero-left {
+      display:block; position:relative; overflow:hidden;
+      border-right: 2px solid #333;
+    }
+    .hero-left img {
+      position:absolute; inset:0; width:100%; height:100%;
+      object-fit:cover; filter: grayscale(100%) brightness(0.95) contrast(1.1);
+    }
+    .hero-left-overlay {
+      position:absolute; top:0; right:0; width:24px; height:100%;
+      background:linear-gradient(to left, rgba(0,0,0,.25), transparent);
+    }
+    .hero-right {
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:60px 56px; position:relative;
+      background: var(--white);
+    }
+    .hero-tag {
+      font-size:15px; letter-spacing:.15em; color:var(--red); margin-bottom:10px;
+    }
+    .hero-portfolio-tag {
+      font-family:'Caveat',cursive; font-weight:700;
+      font-size:38px; color:var(--black); display:inline-block;
+    }
+    .hero-name-wrap { flex:1; display:flex; align-items:center; justify-content:center; }
+    .hero-name-box { border:2px solid var(--black); padding:10px 22px; transform:rotate(-6deg); }
+    .hero-name {
+      font-family:'Caveat',cursive; font-weight:700;
+      font-size:clamp(40px,6vw,56px); line-height:1; color:var(--black);
+    }
+    .hero-quote {
+      font-style:italic; font-size:15px; line-height:1.6; color:var(--red);
+    }
+    .hero-scroll {
+      display:flex; align-items:center; gap:16px;
+      font-size:13px; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--gray); cursor:none; margin-top:16px;
+    }
+    .hero-scroll-line{ width:48px; height:1px; background:var(--red); transition:width .3s; }
+    .hero-scroll:hover .hero-scroll-line{ width:80px; }
+
+    /* ── ABOUT (moodboard) ── */
+    #about { padding:64px 40px; display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap; }
+    .about-text { flex:1; min-width:240px; }
+    .about-title { font-family:'Caveat',cursive; font-weight:700; font-size:34px; color:var(--white); margin-bottom:10px; }
+    .about-bio { font-size:14px; color:rgba(245,240,235,.75); line-height:1.6; max-width:420px; margin-bottom:16px; }
+    .about-stats { display:flex; gap:24px; }
+    .stat-num { font-family:'Caveat',cursive; font-weight:700; font-size:26px; color:var(--yellow); }
+    .stat-desc { font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--gray); }
+
+    .about-photos { position:relative; width:220px; height:200px; flex-shrink:0; }
+    .about-main-photo {
+      position:absolute; top:0; left:0; width:150px;
+      filter:grayscale(100%); transform:rotate(-3deg);
+      box-shadow:0 10px 24px rgba(0,0,0,.5);
+    }
+    .about-tape {
+      position:absolute; top:-6px; left:36px; width:44px; height:14px;
+      background:rgba(245,240,235,.45); transform:rotate(-8deg);
+    }
+    .about-polaroid {
+      position:absolute; bottom:0; right:0; background:#f5f0eb;
+      padding:8px 8px 26px; width:100px;
+      box-shadow:0 10px 24px rgba(0,0,0,.5); transform:rotate(6deg);
+      cursor:none; transition:transform .3s;
+    }
+    .about-polaroid:hover{ transform:rotate(0deg) scale(1.05); z-index:5; }
+    .about-polaroid img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; filter:grayscale(20%); }
+    .about-polaroid p{ font-family:'Caveat',cursive; font-size:12px; color:#333; text-align:center; margin-top:6px; }
+
+    /* ── PORTFOLIO (sticker collage) ── */
+    .portfolio-label { padding:24px 40px 0; }
+    .portfolio-label h2 {
+      font-family:'Caveat',cursive;font-weight:700;
+      font-size:clamp(48px,7vw,90px); line-height:1; color:var(--yellow); letter-spacing:.02em;
+    }
+
+    #gallery { position:relative; padding:20px 40px 40px; min-height:640px; }
+    .sticker {
+      position:absolute; cursor:none;
+      box-shadow:0 10px 26px rgba(0,0,0,.5);
+      transition:transform .3s ease, box-shadow .3s ease;
+    }
+    .sticker:hover{ transform:scale(1.06) rotate(0deg) !important; z-index:20; box-shadow:0 16px 36px rgba(0,0,0,.65); }
+    .sticker img{ width:100%; display:block; filter:grayscale(100%) brightness(.95); }
+
+    .s1{ top:0;    left:0;    width:190px; transform:rotate(-4deg); }
+    .s2{ top:20px; left:210px;width:150px; transform:rotate(3deg); }
+    .s3{ top:0;    right:0;   width:170px; transform:rotate(-2deg); }
+    .s4{ top:230px;left:30px; width:160px; transform:rotate(5deg); }
+    .s5{ top:250px;left:220px;width:190px; transform:rotate(-3deg); }
+    .s6{ top:200px;right:10px;width:170px; transform:rotate(4deg); }
+    .s7{ top:460px; left:70px; width:200px; transform:rotate(-2deg); display:none; }
+
+    .gallery-quote {
+      text-align:center; padding:0 40px 8px;
+      font-style:italic; font-size:17px; color:var(--white); line-height:1.4;
+    }
+    .view-more-wrap{ text-align:center; padding:0 40px 56px; }
+    .view-more-btn {
+      display:inline-block; background:var(--yellow); color:var(--red);
+      padding:8px 26px; font-family:'Caveat',cursive; font-weight:700;
+      font-size:15px; letter-spacing:.05em; cursor:none; border:none;
+      transition:transform .2s;
+    }
+    .view-more-btn:hover{ transform:scale(1.05); }
+
+    /* ── POLAROID STRIP ── */
+    .strip-title { padding:8px 40px 12px; font-size:22px; color:var(--pink); }
+    .polaroid-strip {
+      padding:0 40px 56px; display:flex; gap:20px; overflow-x:auto; scrollbar-width:none;
+    }
+    .polaroid-strip::-webkit-scrollbar{ display:none; }
+    .polaroid {
+      flex-shrink:0; background:#f5f0eb; padding:8px 8px 26px; width:150px;
+      transform:rotate(var(--r,-2deg));
+      box-shadow:6px 6px 20px rgba(0,0,0,.5);
+      cursor:none; transition:transform .3s;
+    }
+    .polaroid:hover{ transform:rotate(0deg) scale(1.05); z-index:10; }
+    .polaroid:nth-child(even){ --r:2deg; margin-top:16px; }
+    .polaroid img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; filter:grayscale(20%); }
+    .polaroid-label{ font-family:'Caveat',cursive; font-size:13px; color:#333; text-align:center; margin-top:6px; }
+
+    #lightbox {
+      display:none; position:fixed; inset:0; z-index:5000;
+      background:rgba(0,0,0,.97); align-items:center; justify-content:center;
+    }
+    #lightbox.open{ display:flex; }
+    #lightbox img{ max-width:90vw; max-height:88vh; object-fit:contain; }
+    #lightbox-close {
+      position:fixed; top:24px; right:32px; background:none; border:none;
+      font-family:'Caveat',cursive;font-weight:700; font-size:32px;
+      color:var(--white); cursor:none; letter-spacing:.1em;
+    }
+
+    /* ── CONTACT ── */
+    #contact { padding:56px 40px 40px; border-top:1px solid rgba(245,240,235,.15); }
+    .contact-top { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:32px; flex-wrap:wrap; gap:20px; }
+    .contact-big{ font-family:'Caveat',cursive; font-weight:700; font-size:clamp(32px,5vw,60px); color:var(--white); line-height:1.1; }
+    .contact-big span{ color:var(--yellow); }
+    .contact-links-row{ display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+    .contact-links-row a {
+      color:var(--blue); text-decoration:none; cursor:none;
+      font-size:12px; letter-spacing:.1em; text-transform:uppercase; transition:color .2s;
+    }
+    .contact-links-row a:hover{ color:var(--yellow); }
+    .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+    .form-group{ margin-bottom:12px; }
+    .form-group label{ display:block; font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--gray); margin-bottom:6px; }
+    .form-group input, .form-group textarea {
+      width:100%; background:rgba(255,255,255,.06);
+      border:1px solid rgba(245,240,235,.25); color:var(--white);
+      padding:11px 14px; font-family:'Caveat',cursive; font-size:14px;
+      outline:none; transition:border-color .2s;
+    }
+    .form-group input:focus, .form-group textarea:focus{ border-color:var(--blue); }
+    .form-group textarea{ resize:vertical; min-height:60px; }
+    .btn-send {
+      background:var(--yellow); border:none; color:var(--red);
+      padding:13px 40px; font-family:'Caveat',cursive;font-weight:700;
+      font-size:17px; letter-spacing:.05em; cursor:none; transition:background .2s,transform .2s;
+    }
+    .btn-send:hover{ transform:scale(1.03); }
+
+    footer {
+      margin-top:32px; padding-top:16px; border-top:1px solid rgba(245,240,235,.15);
+      display:flex; justify-content:space-between;
+      font-size:12px; color:var(--gray); letter-spacing:.05em;
+    }
+
+    #whatsapp {
+      position:fixed; bottom:32px; right:32px; z-index:500;
+      background:#25D366; color:#fff; width:52px; height:52px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      text-decoration:none; box-shadow:0 4px 24px rgba(37,211,102,.4);
+      transition:transform .3s,box-shadow .3s; font-size:24px; cursor:none;
+    }
+    #whatsapp:hover{ transform:scale(1.12); }
+    #whatsapp-label {
+      position:fixed; bottom:40px; right:92px; z-index:500;
+      background:var(--yellow); color:var(--red);
+      font-family:'Caveat',cursive;font-weight:700; font-size:13px;
+      padding:5px 12px; opacity:0; transform:translateX(8px);
+      transition:opacity .3s,transform .3s; pointer-events:none; white-space:nowrap;
+    }
+    #whatsapp:hover ~ #whatsapp-label{ opacity:1; transform:translateX(0); }
+
+    #music-btn {
+      position:fixed; bottom:96px; right:32px; z-index:500;
+      width:48px; height:48px; border-radius:50%;
+      background:var(--blue); border:none; cursor:none;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 20px rgba(137,180,212,.4);
+      transition:transform .3s; font-size:20px;
+    }
+    #music-btn:hover { transform:scale(1.1); }
+    #music-label {
+      position:fixed; bottom:104px; right:88px; z-index:500;
+      background:var(--yellow); color:var(--red);
+      font-family:'Caveat',cursive;font-weight:700; font-size:12px;
+      padding:5px 10px; pointer-events:none; opacity:0; transform:translateX(8px);
+      transition:opacity .2s, transform .2s; white-space:nowrap;
+    }
+    #music-btn:hover ~ #music-label { opacity:1; transform:translateX(0); }
+    #music-player {
+      position:fixed; bottom:96px; right:32px; z-index:500;
+      background:var(--white); border-radius:16px; padding:12px 14px; display:none;
+      align-items:center; gap:10px; box-shadow:0 8px 32px rgba(0,0,0,.35); min-width:230px;
+    }
+    #music-player.open { display:flex; }
+    .mp-art { width:38px; height:38px; border-radius:8px; flex-shrink:0; background:var(--pink); display:flex; align-items:center; justify-content:center; font-size:18px; }
+    .mp-info { flex:1; min-width:0; }
+    .mp-title { font-family:'Caveat',cursive; font-size:14px; font-weight:700; color:var(--black); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mp-artist { font-size:10px; color:var(--gray); margin-top:1px; }
+    .mp-bar { margin-top:6px; background:#ddd; border-radius:4px; height:3px; }
+    .mp-progress { width:0%; background:var(--red); height:3px; border-radius:4px; transition:width .4s linear; }
+    .mp-controls { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .mp-play { width:28px; height:28px; border-radius:50%; background:var(--black); border:none; cursor:none; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .mp-close { background:none; border:none; cursor:none; font-size:14px; color:var(--gray); padding:4px; }
+
+    @media (max-width:768px){
+      body{ cursor:auto; }
+      #cursor,#cursor-dot,#cursor-label{ display:none; }
+      nav{ padding:14px 20px; }
+      .nav-links{ gap:14px; }
+      #hero{ grid-template-columns:1fr 1fr; min-height:70vh; }
+      .hero-right{ padding:16px 12px; gap:10px; }
+      .hero-tag{ font-size:9px; margin-bottom:3px; }
+      .hero-portfolio-tag{ font-size:17px; }
+      .hero-name-box{ padding:5px 10px; border-width:1.5px; }
+      .hero-name{ font-size:19px; }
+      .hero-quote{ font-size:8px; line-height:1.3; }
+      .hero-scroll{ font-size:7px; gap:6px; margin-top:6px; }
+      .hero-scroll-line{ width:18px; }
+      #about{ padding:32px 20px; flex-direction:column; }
+      .about-photos{ width:180px; height:170px; }
+      .portfolio-label{ padding:16px 20px 0; }
+      #gallery{ padding:16px 20px 32px; min-height:520px; }
+      .s1{ width:140px; }
+      .s2{ width:110px; left:150px; }
+      .s3{ width:120px; }
+      .s4{ width:120px; top:190px; }
+      .s5{ width:140px; top:200px; left:150px; }
+      .s6{ width:120px; top:170px; }
+      .gallery-quote{ padding:0 20px 8px; font-size:14px; }
+      .strip-title,.polaroid-strip{ padding-left:20px; padding-right:20px; }
+      #contact{ padding:32px 20px; }
+      .contact-top{ flex-direction:column; align-items:flex-start; }
+      .contact-links-row{ align-items:flex-start; }
+      .form-row{ grid-template-columns:1fr; }
+      footer{ flex-direction:column; gap:6px; text-align:center; }
+      #whatsapp{ bottom:20px; right:20px; width:46px; height:46px; }
+      #music-btn{ bottom:78px; right:20px; }
+      #music-player{ bottom:78px; right:20px; min-width:200px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-name">
+    <span>K</span><span>A</span><span>T</span><span>E</span><span>R</span><span>I</span><span>N</span><span>A</span>
+  </div>
+  <div class="loader-sub">Portfolio</div>
+  <div class="loader-line"></div>
+</div>
+
+<div id="cursor"></div>
+<div id="cursor-dot"></div>
+<div id="cursor-label"></div>
+
+<nav>
+  <a class="nav-logo" href="#hero">KATERINA.VISUAL</a>
+  <ul class="nav-links">
+    <li><a href="#gallery">Portfolio</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- HERO (BOOK) -->
+<section id="hero">
+  <div class="hero-left">
+    <img src="about.jpeg" alt="Katerina"/>
+    <div class="hero-left-overlay"></div>
+  </div>
+  <div class="hero-right">
+    <div>
+      <p class="hero-tag">photographer</p>
+      <span class="hero-portfolio-tag">Portfolio</span>
+    </div>
+    <div class="hero-name-wrap">
+      <div class="hero-name-box"><h1 class="hero-name">KATERINA</h1></div>
+    </div>
+    <div>
+      <p class="hero-quote">"I'll see your uniqueness<br>from the first time."</p>
+      <div class="hero-scroll" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'})">
+        <div class="hero-scroll-line"></div>
+        See the work
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT (moodboard) -->
+<section id="about">
+  <div class="about-photos">
+    <img class="about-main-photo" src="about.jpeg" alt="Katerina"/>
+    <div class="about-tape"></div>
+    <div class="about-polaroid" onclick="openLightbox('about.jpeg')">
+      <img src="about.jpeg" alt="polaroid"/>
+      <p>it's me</p>
+    </div>
+  </div>
+  <div class="about-text">
+    <p class="about-title">about</p>
+    <p class="about-bio">
+      I'm <strong>Katerina</strong> — a photographer who speaks in light, shadow, and silence.
+      Every frame I shoot is a conversation between the world and the person standing in it.
+      I don't chase perfect scenes — I wait for honest ones.
+    </p>
+    <div class="about-stats">
+      <div><div class="stat-num">3+</div><div class="stat-desc">Years</div></div>
+      <div><div class="stat-num">100+</div><div class="stat-desc">Projects</div></div>
+      <div><div class="stat-num">∞</div><div class="stat-desc">Passion</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFOLIO LABEL -->
+<div class="portfolio-label"><h2>PORTFOLIO</h2></div>
+
+<!-- GALLERY (sticker collage) -->
+<section id="gallery">
+  <div class="sticker s1" onclick="openLightbox('image 1.jpeg')"><img src="image 1.jpeg" alt="frame 01"/></div>
+  <div class="sticker s2" onclick="openLightbox('image 2.jpeg')"><img src="image 2.jpeg" alt="frame 02"/></div>
+  <div class="sticker s3" onclick="openLightbox('image 3.jpeg')"><img src="image 3.jpeg" alt="frame 03"/></div>
+  <div class="sticker s4" onclick="openLightbox('image 4.jpeg')"><img src="image 4.jpeg" alt="frame 04"/></div>
+  <div class="sticker s5" onclick="openLightbox('image 5.jpeg')"><img src="image 5.jpeg" alt="frame 05"/></div>
+  <div class="sticker s6" onclick="openLightbox('image 6.jpeg')"><img src="image 6.jpeg" alt="frame 06"/></div>
+  <div class="sticker s7" id="extraSticker" onclick="openLightbox('image 7.jpeg')"><img src="image 7.jpeg" alt="frame 07"/></div>
+</section>
+
+<p class="gallery-quote">"Each frame is unique, as is the person in it."</p>
+<div class="view-more-wrap">
+  <button class="view-more-btn" onclick="viewMore()" id="viewMoreBtn">VIEW MORE</button>
+</div>
+
+<!-- POLAROIDS -->
+<div class="strip-title">— polaroids ✦</div>
+<div class="polaroid-strip">
+  <div class="polaroid" onclick="openLightbox('image 1.jpeg')"><img src="image 1.jpeg" alt="p1"/><div class="polaroid-label">frame 01</div></div>
+  <div class="polaroid" onclick="openLightbox('image 2.jpeg')"><img src="image 2.jpeg" alt="p2"/><div class="polaroid-label">frame 02</div></div>
+  <div class="polaroid" onclick="openLightbox('image 3.jpeg')"><img src="image 3.jpeg" alt="p3"/><div class="polaroid-label">frame 03</div></div>
+  <div class="polaroid" onclick="openLightbox('image 4.jpeg')"><img src="image 4.jpeg" alt="p4"/><div class="polaroid-label">frame 04</div></div>
+  <div class="polaroid" onclick="openLightbox('image 5.jpeg')"><img src="image 5.jpeg" alt="p5"/><div class="polaroid-label">frame 05</div></div>
+  <div class="polaroid" onclick="openLightbox('image 6.jpeg')"><img src="image 6.jpeg" alt="p6"/><div class="polaroid-label">frame 06</div></div>
+  <div class="polaroid" onclick="openLightbox('image 7.jpeg')"><img src="image 7.jpeg" alt="p7"/><div class="polaroid-label">frame 07</div></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">CLOSE ✕</button>
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-top">
+    <div class="contact-big">Let's<br>Connect <span>!</span></div>
+    <div class="contact-links-row">
+      <a href="https://www.instagram.com/katerina.visual?igsh=MWZ0bjlxMGtzdnlmYw==" target="_blank">↗ @katerina.visual</a>
+      <a href="mailto:katerina.visual9@gmail.com">↗ katerina.visual9@gmail.com</a>
+      <a href="tel:+995568173905">↗ +995 568 173 905</a>
+    </div>
+  </div>
+  <form onsubmit="handleSubmit(event)">
+    <div class="form-row">
+      <div class="form-group"><label>Your Name</label><input type="text" placeholder="Your name" required/></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="name@example.com" required/></div>
+    </div>
+    <div class="form-group"><label>Message</label><textarea placeholder="Tell me about your project..." required></textarea></div>
+    <button type="submit" class="btn-send">SEND IT →</button>
+  </form>
+  <footer>
+    <p>© 2026 KATERINA — ALL RIGHTS RESERVED</p>
+    <p>KATERINA.VISUAL</p>
+  </footer>
+</section>
+
+<a id="whatsapp" href="https://wa.me/995568173905" target="_blank" title="Book a session">📲</a>
+<div id="whatsapp-label">BOOK A SESSION</div>
+
+<button id="music-btn" onclick="openMusic()" title="Music">🎵</button>
+<div id="music-label">MUSIC ON/OFF</div>
+<div id="music-player">
+  <div class="mp-art">🎻</div>
+  <div class="mp-info">
+    <div class="mp-title">Four Seasons — Spring</div>
+    <div class="mp-artist">Vivaldi</div>
+    <div class="mp-bar"><div class="mp-progress" id="mp-prog"></div></div>
+  </div>
+  <div class="mp-controls">
+    <button class="mp-play" id="mp-playbtn" onclick="togglePlay()">▶</button>
+    <button class="mp-close" onclick="closeMusic()">✕</button>
+  </div>
+</div>
+<iframe id="yt-frame" width="0" height="0"
+  src="https://www.youtube.com/embed/GRxofEmo3HA?autoplay=0&controls=0&loop=1&playlist=GRxofEmo3HA"
+  allow="autoplay" style="display:none;" frameborder="0"></iframe>
+
+<script>
+  window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('loader').classList.add('hide'), 2200);
+  });
+
+  const cur = document.getElementById('cursor');
+  const dot = document.getElementById('cursor-dot');
+  const lbl = document.getElementById('cursor-label');
+  let mx=0,my=0,cx=0,cy=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    dot.style.left=mx+'px'; dot.style.top=my+'px';
+    lbl.style.left=(mx+24)+'px'; lbl.style.top=(my-8)+'px';
+  });
+  function animCursor(){
+    cx+=(mx-cx)*.12; cy+=(my-cy)*.12;
+    cur.style.left=cx+'px'; cur.style.top=cy+'px';
+    requestAnimationFrame(animCursor);
+  }
+  animCursor();
+  document.querySelectorAll('.sticker,.polaroid,.about-polaroid').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cur.classList.add('hover');lbl.textContent='VIEW';lbl.classList.add('show');});
+    el.addEventListener('mouseleave',()=>{cur.classList.remove('hover');lbl.classList.remove('show');});
+  });
+  document.querySelectorAll('a,button,.btn-send,.hero-scroll').forEach(el=>{
+    el.addEventListener('mouseenter',()=>cur.classList.add('hover'));
+    el.addEventListener('mouseleave',()=>cur.classList.remove('hover'));
+  });
+
+  function openLightbox(src){
+    document.getElementById('lightbox-img').src=src;
+    document.getElementById('lightbox').classList.add('open');
+  }
+  function closeLightbox(){
+    document.getElementById('lightbox').classList.remove('open');
+  }
+  document.getElementById('lightbox').addEventListener('click',function(e){if(e.target===this)closeLightbox();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+  function viewMore(){
+    document.getElementById('extraSticker').style.display='block';
+    document.getElementById('gallery').style.minHeight='860px';
+    document.getElementById('viewMoreBtn').style.display='none';
+  }
+
+  let isPlaying = false;
+  let progVal = 0;
+  let progInterval;
+  function openMusic(){
+    document.getElementById('music-btn').style.display='none';
+    document.getElementById('music-label').style.display='none';
+    document.getElementById('music-player').classList.add('open');
+    startTrack();
+  }
+  function closeMusic(){
+    document.getElementById('music-player').classList.remove('open');
+    document.getElementById('music-btn').style.display='flex';
+    document.getElementById('music-label').style.display='block';
+    pauseTrack();
+    progVal=0;
+    document.getElementById('mp-prog').style.width='0%';
+  }
+  function togglePlay(){ isPlaying ? pauseTrack() : startTrack(); }
+  function startTrack(){
+    isPlaying=true;
+    document.getElementById('mp-playbtn').textContent='⏸';
+    try{ document.getElementById('yt-frame').contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}','*'); }catch(e){}
+    clearInterval(progInterval);
+    progInterval=setInterval(()=>{ progVal=(progVal+0.1)%100; document.getElementById('mp-prog').style.width=progVal+'%'; },150);
+  }
+  function pauseTrack(){
+    isPlaying=false;
+    document.getElementById('mp-playbtn').textContent='▶';
+    try{ document.getElementById('yt-frame').contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}','*'); }catch(e){}
+    clearInterval(progInterval);
+  }
+
+  function handleSubmit(e){
+    e.preventDefault();
+    const btn=e.target.querySelector('.btn-send');
+    btn.textContent='✓ SENT!'; btn.style.background='#2ecc71';
+    setTimeout(()=>{btn.textContent='SEND IT →';btn.style.background='';e.target.reset();},3000);
+  }
+</script>
+</body>
+</html>
