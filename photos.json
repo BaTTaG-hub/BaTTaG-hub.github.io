@@ -1,0 +1,23 @@
+---
+layout: null
+---
+[
+{%- assign first = true -%}
+{%- for file in site.static_files -%}
+  {%- assign lower_path = file.path | downcase -%}
+  {%- assign ext = file.extname | downcase -%}
+  {%- if lower_path contains '/photos/' -%}
+    {%- if ext == '.jpg' or ext == '.jpeg' or ext == '.png' or ext == '.webp' -%}
+      {%- assign category = 'all' -%}
+      {%- if lower_path contains '/photos/children/' -%}{%- assign category = 'children' -%}
+      {%- elsif lower_path contains '/photos/personal/' -%}{%- assign category = 'personal' -%}
+      {%- elsif lower_path contains '/photos/events/' -%}{%- assign category = 'events' -%}
+      {%- elsif lower_path contains '/photos/commercial/' -%}{%- assign category = 'commercial' -%}
+      {%- endif -%}
+      {%- unless first -%},{%- endunless -%}
+      {"name": {{ file.name | jsonify }}, "path": {{ file.path | relative_url | jsonify }}, "category": {{ category | jsonify }}}
+      {%- assign first = false -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+]
